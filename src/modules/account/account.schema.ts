@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-
+import { Document } from 'mongoose';
 @Schema({
-  collection: 'accounts',
+  collection: 'account',
   timestamps: true,
 })
 export class Account extends Document {
@@ -10,5 +10,14 @@ export class Account extends Document {
 
   @Prop()
   password: string;
+
+  @Prop()
+  number_phone: string;
+
+  @Prop()
+  full_name: string;
+
+  @Prop()
+  status: boolean;
 }
 export const AccountSchema = SchemaFactory.createForClass(Account);

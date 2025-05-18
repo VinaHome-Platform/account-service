@@ -7,7 +7,7 @@ import { AuthService } from './auth.service';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @MessagePattern('login_bms')
+  @MessagePattern({ ac: 'login_bms' })
   async loginBms(data: LoginFormBMS) {
     try {
       const response = await this.authService.loginBms(data);
