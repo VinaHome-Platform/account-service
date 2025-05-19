@@ -18,6 +18,18 @@ export class Account extends Document {
   full_name: string;
 
   @Prop()
+  email: string;
+
+  @Prop()
+  address: string;
+
+  @Prop()
+  date_of_birth: Date;
+
+  @Prop()
+  gender: string;
+
+  @Prop()
   status: boolean;
 }
 export const AccountSchema = SchemaFactory.createForClass(Account);
