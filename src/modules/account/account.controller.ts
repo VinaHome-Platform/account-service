@@ -1,6 +1,6 @@
-import { Controller, InternalServerErrorException } from '@nestjs/common';
+import { Controller, HttpStatus } from '@nestjs/common';
 import { AccountService } from './account.service';
-import { MessagePattern } from '@nestjs/microservices';
+import { MessagePattern, RpcException } from '@nestjs/microservices';
 import { CreateAccountStaff } from './account.dto';
 
 @Controller()
@@ -17,10 +17,10 @@ export class AccountController {
         result,
       };
     } catch (error) {
-      console.error('Error creating account staff:', error);
-      throw new InternalServerErrorException({
+      throw new RpcException({
         success: false,
-        message: 'Lỗi hệ thống!',
+        message: 'Lỗi máy chủ dịch vụ!!',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       });
     }
   }
