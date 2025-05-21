@@ -1,5 +1,5 @@
-import { Controller } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
+import { Controller, HttpStatus } from '@nestjs/common';
+import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { LoginFormBMS } from './auth.dto';
 import { AuthService } from './auth.service';
 
@@ -8,20 +8,21 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @MessagePattern({ ac: 'login_bms' })
-  async loginBms(data: LoginFormBMS) {
+  async loginBms(@Payload() data: LoginFormBMS) {
     try {
-      const response = await this.authService.loginBms(data);
+      const result = await this.authService.loginBms(data);
       return {
         success: true,
         message: 'Đăng nhập thành công!',
-        result: response,
+        statusCode: HttpStatus.OK,
+        result,
       };
     } catch (error) {
-      console.error('Error:', error);
-      return {
+      throw new RpcException({
         success: false,
-        message: 'Lỗi hệ thống',
-      };
+        message: error.response?.message || 'Lỗi máy chủ dịch vụ!',
+        statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      });
     }
   }
 }

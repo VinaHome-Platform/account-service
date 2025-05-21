@@ -1,10 +1,17 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Account } from './account.schema';
 import { Model } from 'mongoose';
-import { CreateAccountStaff } from './account.dto';
+import {
+  DTO_RP_AccountStaff,
+  DTO_RQ_CreateAccountStaff,
+  DTO_RQ_UpdateAccountStaff,
+} from './account.dto';
 import * as argon2 from 'argon2';
-import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class AccountService {
@@ -12,38 +19,81 @@ export class AccountService {
     @InjectModel(Account.name) private accountModel: Model<Account>,
   ) {}
 
-  async createAccountStaff(data: CreateAccountStaff) {
-    console.log('Data:', data);
+  // [FEAT] Create Account Staff
+  async createAccountStaff(
+    data: DTO_RQ_CreateAccountStaff,
+  ): Promise<DTO_RP_AccountStaff> {
+    // console.log('Data:', data);
+
+    // Kiểm tra xem tài khoản đã tồn tại hay chưa
     const existingAccount = await this.accountModel
       .findOne({ username: data.username })
-      .lean();
+      .lean()
+      .exec();
     if (existingAccount) {
-      console.log('Tài khoản đã tồn tại:', existingAccount);
-      throw new RpcException({
-        success: false,
-        message: 'Tài khoản đã tồn tại!',
-        statusCode: HttpStatus.CONFLICT,
-      });
+      // console.log('Tài khoản đã tồn tại:', existingAccount);
+      throw new ConflictException('Tài khoản đã tồn tại');
     }
+    // Mã hóa mật khẩu bằng argon2
     const hashedPassword = await argon2.hash(data.password);
-    const accountData = {
+
+    const createdAccount = await this.accountModel.create({
       ...data,
       password: hashedPassword,
       account_type: 'BUS',
-      _id: undefined,
-    };
-    delete accountData._id;
-
-    const newAccount = new this.accountModel(accountData);
-    const savedAccount = await newAccount.save();
-
-    console.log('✅ Account created successfully:', {
-      _id: savedAccount._id,
-      username: savedAccount.username,
-      account_type: savedAccount.account_type,
     });
 
-    // 6. Trả về thông tin tài khoản (đã convert thành plain object)
-    return savedAccount.toObject() as Account;
+    return {
+      id: createdAccount._id,
+      username: createdAccount.username,
+      number_phone: createdAccount.number_phone,
+      full_name: createdAccount.full_name,
+      email: createdAccount.email,
+      address: createdAccount.address,
+      date_of_birth: createdAccount.date_of_birth,
+      gender: createdAccount.gender,
+      status: createdAccount.status,
+      role: createdAccount.role,
+      accept_app: createdAccount.accept_app,
+    } as DTO_RP_AccountStaff;
+  }
+
+  // [FEAT] Delete Account Staff
+  async deleteAccountStaff(id: string): Promise<void> {
+    console.log('ID:', id);
+    const result = await this.accountModel.findByIdAndDelete(id).lean().exec();
+    if (!result) {
+      throw new NotFoundException('Không tìm thấy dữ liệu tài khoản');
+    }
+  }
+
+  // [FEAT] Update Account Staff
+  async updateAccountStaff(
+    data: DTO_RQ_UpdateAccountStaff,
+    id: string,
+  ): Promise<DTO_RP_AccountStaff> {
+    const updatedAccount = await this.accountModel
+      .findByIdAndUpdate(id, data, {
+        new: true,
+        runValidators: true,
+      })
+      .lean()
+      .exec();
+    if (!updatedAccount) {
+      throw new NotFoundException('Không tìm thấy dữ liệu tài khoản');
+    }
+    return {
+      id: updatedAccount._id,
+      username: updatedAccount.username,
+      number_phone: updatedAccount.number_phone,
+      full_name: updatedAccount.full_name,
+      email: updatedAccount.email,
+      address: updatedAccount.address,
+      date_of_birth: updatedAccount.date_of_birth,
+      gender: updatedAccount.gender,
+      status: updatedAccount.status,
+      role: updatedAccount.role,
+      accept_app: updatedAccount.accept_app,
+    } as DTO_RP_AccountStaff;
   }
 }
