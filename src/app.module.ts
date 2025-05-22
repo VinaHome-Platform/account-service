@@ -4,9 +4,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { AccountModule } from './modules/account/account.module';
+import configuration from './config/configuration';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
+      load: [configuration],
       isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI, {
