@@ -13,3 +13,7 @@ export class DTO_RP_LoginBMS {
   company_id: number;
   role: string;
 }
+
+export class DTO_RQ_RefreshToken {
+  refresh_token: string;
+}
